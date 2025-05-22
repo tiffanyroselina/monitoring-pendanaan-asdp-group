@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -44,7 +43,7 @@ principal_interval = st.sidebar.selectbox("Frekuensi Pembayaran Pokok (bulan)", 
 principal_portion = st.sidebar.number_input("Porsi Pembayaran Pokok per Termin (Rp)", value=10_000_000, step=1_000_000)
 interest_interval = st.sidebar.selectbox("Frekuensi Pembayaran Bunga (bulan)", [1, 3, 6])
 start_date = st.sidebar.date_input("Tanggal Mulai Pinjaman", datetime.today())
-principal_start_date = st.sidebar.date_input("Tanggal Mulai Pembayaran Pokok (Opsional)", value=None)
+principal_start_date = st.sidebar.date_input("Tanggal Mulai Pembayaran Pokok (Opsional)")
 due_day = st.sidebar.number_input("Tanggal Jatuh Tempo Pembayaran (1-31)", min_value=1, max_value=31, value=25)
 
 if st.sidebar.button("Tambah Pinjaman") and company_name and bank_name and principal > 0:
@@ -68,21 +67,16 @@ if st.sidebar.button("Tambah Pinjaman") and company_name and bank_name and princ
 
         row["Jatuh Tempo"] = due_date.strftime("%Y-%m-%d")
 
-        # Pembayaran pokok hanya jika sudah lewat tanggal mulai pokok
+        # Pembayaran pokok hanya dilakukan setelah tanggal mulai pembayaran pokok
         principal_payment = 0
         if month % principal_interval == 0 and remaining_principal > 0:
-    if use_principal_start:
-        if due_date.date() < principal_start_date:
-            principal_payment = 0  # Lewati jika belum masuk tanggal dimulainya pokok
-        else:
-            principal_payment = min(principal_portion, remaining_principal)
-    else:
-        principal_payment = min(principal_portion, remaining_principal)
-else:
-    principal_payment = 0
+            if use_principal_start and due_date.date() >= principal_start_date:
+                principal_payment = min(principal_portion, remaining_principal)
+            elif not use_principal_start:
+                principal_payment = min(principal_portion, remaining_principal)
         remaining_principal -= principal_payment
 
-        # Bunga berbasis harian
+        # Hitung bunga berbasis hari aktual
         total_interest = 0
         bunga_rincian = {}
         if remaining_principal > 0 and month % interest_interval == 0:
@@ -133,7 +127,7 @@ else:
 
     st.success(f"✅ Pinjaman dari {bank_name} untuk perusahaan {company_name} berhasil ditambahkan.")
 
-# Ringkasan
+# TAMPILKAN RINGKASAN
 st.header("🏢 Pilih Perusahaan untuk Melihat Pinjaman")
 if st.session_state.companies:
     selected_company = st.selectbox("Perusahaan", list(st.session_state.companies.keys()))
