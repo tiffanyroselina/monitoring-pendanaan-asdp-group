@@ -71,13 +71,15 @@ if st.sidebar.button("Tambah Pinjaman") and company_name and bank_name and princ
         # Pembayaran pokok hanya jika sudah lewat tanggal mulai pokok
         principal_payment = 0
         if month % principal_interval == 0 and remaining_principal > 0:
-            if use_principal_start:
-                if due_date.date() >= principal_start_date:
-                    principal_payment = min(principal_portion, remaining_principal)
-            else:
-                principal_payment = min(principal_portion, remaining_principal)
+    if use_principal_start:
+        if due_date.date() < principal_start_date:
+            principal_payment = 0  # Lewati jika belum masuk tanggal dimulainya pokok
         else:
-            principal_payment = 0
+            principal_payment = min(principal_portion, remaining_principal)
+    else:
+        principal_payment = min(principal_portion, remaining_principal)
+else:
+    principal_payment = 0
         remaining_principal -= principal_payment
 
         # Bunga berbasis harian
